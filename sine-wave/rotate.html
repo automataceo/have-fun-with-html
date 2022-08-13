@@ -1,0 +1,159 @@
+<html>
+    <head>
+        <style>
+            #screen { 
+                display:"block";
+                width:"800px"; width:"600px";
+                border:"grey 1px solid";
+                color:"red";
+            }
+        </style>    
+    </head>
+
+    <body>
+        <p>진동의원리</p>
+        <div>
+            <canvas 
+                id="screen" width="800" height="600" style="width:800px; height:600px;">
+            </canvas>
+        </div>
+    </body>
+
+    <script>
+        let cvs = document.querySelector("#screen");
+        let ctx = cvs.getContext("2d");
+        console.log(ctx)
+
+        // fill color
+        w = cvs.width;
+        h = cvs.height;
+        // ctx.fillRect(0, 0, w, h);
+
+        // 좌표
+        
+        // 회전 중심 위치
+        function init() {
+            cx1 = 600; cy1 = 300;
+            // 좌측 벽 시작
+            cx2 = 430;
+            // 볼 직경
+            r1 = 30; r2 = 10;
+            // 볼 공전 거리
+            d1 = 100;
+            // 볼 회전 속도
+            delta = 0.1;
+            // 볼 초기 각도
+            angle = 0;
+            // 시간 축 진행 속도
+            speed = 1;
+            // y 축 궤적 추적 어레이
+            amps = Array(1000);
+            // 투영 그리기 여부
+            drawReflection = false;
+            // 궤적 그리기 여부
+            drawWave = false;
+            // 연결선 그리기 여부
+            drawConnectionLine = false;
+        }
+
+        init();
+        requestAnimationFrame(aniFunc);
+
+        function drawCircle(x, y, r, fill, stroke) {
+
+        }
+
+        function aniFunc(t) {
+            ctx.backupLineWidth = ctx.lineWidth;
+            angle = angle + delta;
+            if(angle > Math.PI*2) angle = angle - Math.PI*2;
+            px = Math.cos(angle)*d1;
+            py = Math.sin(angle)*d1;
+            ctx.clearRect(0, 0, w, h);
+
+            // draw wall
+            if(drawReflection) {
+                ctx.strokeStyle="black";
+                ctx.lineWidth = 5;
+                ctx.beginPath();
+                ctx.moveTo(cx2, cy1+d1);
+                ctx.lineTo(cx2, cy1-d1);
+                ctx.stroke();
+            }
+
+            // draw earth
+            ctx.fillStyle="navy";
+            ctx.strokeStyle="red";
+            ctx.beginPath();
+            ctx.ellipse(cx1, cy1, r1, r1, 1, 0, Math.PI*2, true);
+            ctx.fill();
+
+            // draw sat and reflect
+            ctx.fillStyle="orange";
+            ctx.strokeStyle="red";
+            ctx.beginPath();
+            ctx.ellipse(cx1+px, cy1+py, r2, r2, 1, 0, Math.PI*2, true);
+            // ctx.arc(cx1, cy1, r1, 0, Math.PI*2, true);
+            if(drawReflection) {
+                ctx.ellipse(cx2, cy1+py, r2, r2, 1, 0, Math.PI*2, true);
+            }
+            ctx.fill();
+
+            // connection line
+            if(drawConnectionLine) {
+                ctx.strokeStyle="purple";
+                ctx.lineWidth = ctx.backupLineWidth;
+                ctx.beginPath();
+                ctx.moveTo(cx1+px, cy1+py);
+                ctx.lineTo(cx2, cy1+py);
+                ctx.stroke();
+            }
+
+            // draw wave
+            if(drawWave) {
+                ctx.strokeStyle="green";
+                amps.push(py);
+                amps.shift();
+                ctx.beginPath();
+                ctx.moveTo(cx2, cy1+py);
+                for(var i=0; i<amps.length; i++) {
+                    ctx.lineTo(cx2-i*speed, cy1+amps[amps.length-i-1]);
+                }
+                ctx.stroke();
+            }
+
+            requestAnimationFrame(aniFunc);
+        }
+
+        document.addEventListener("keypress", function(ev){
+            console.log(ev);
+            switch(ev.key) {
+                case '1':
+                    drawReflection = !drawReflection;
+                    break;
+                case '2':
+                    drawConnectionLine = !drawConnectionLine;
+                    break;
+                case '3':
+                    drawWave = !drawWave;
+                    break;
+                case 'w':
+                    d1 += 1;
+                    break;
+                case 's':
+                    d1 -= 1;
+                    break;
+                case 'e':
+                    delta += 0.01;
+                    break;
+                case 'd':
+                    delta -= 0.01;
+                    if(delta < 0) delta = 0;
+                    break;
+                case 'q':
+                    init();
+                    break;
+            }
+        });
+    </script>
+</html>
